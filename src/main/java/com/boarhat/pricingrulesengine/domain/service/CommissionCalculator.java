@@ -1,6 +1,6 @@
 package com.boarhat.pricingrulesengine.domain.service;
 
-import com.boarhat.pricingrulesengine.domain.model.CommissionRate;
+import com.boarhat.pricingrulesengine.domain.model.CommissionResult;
 import com.boarhat.pricingrulesengine.domain.model.PricingContext;
 import com.boarhat.pricingrulesengine.domain.model.PricingRule;
 
@@ -18,11 +18,11 @@ public class CommissionCalculator {
      * @param rules the list of pricing rules to check (evaluated in order)
      * @return the commission rate from the first matching rule, or default rate
      */
-    public CommissionRate calculate(PricingContext context, List<PricingRule> rules) {
+    public CommissionResult calculate(PricingContext context, List<PricingRule> rules) {
         return rules.stream()
                 .filter(rule -> rule.matches(context))
                 .findFirst()
-                .map(PricingRule::getRate)
-                .orElse(CommissionRate.defaultRate());
+                .map(CommissionResult::fromRule)
+                .orElse(CommissionResult.defaultRate());
     }
 }

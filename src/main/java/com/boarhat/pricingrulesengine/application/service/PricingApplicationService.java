@@ -1,6 +1,6 @@
 package com.boarhat.pricingrulesengine.application.service;
 
-import com.boarhat.pricingrulesengine.domain.model.CommissionRate;
+import com.boarhat.pricingrulesengine.domain.model.CommissionResult;
 import com.boarhat.pricingrulesengine.domain.model.PricingContext;
 import com.boarhat.pricingrulesengine.domain.model.PricingRule;
 import com.boarhat.pricingrulesengine.domain.repository.PricingRuleRepository;
@@ -23,7 +23,7 @@ public class PricingApplicationService {
         pricingRuleRepository.save(rule);
     }
 
-    public CommissionRate calculateCommission(PricingContext context) {
+    public CommissionResult calculateCommission(PricingContext context) {
         List<PricingRule> rules = pricingRuleRepository.findAll();
         return commissionCalculator.calculate(context, rules);
     }
