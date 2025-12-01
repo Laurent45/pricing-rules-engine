@@ -1,0 +1,185 @@
+
+### Pricing Rules Engine - API Tests
+### ============================================
+
+### -----------------------------------------
+### 1. Create a simple rule (Spain - Long relationship)
+### -----------------------------------------
+POST http://localhost:8080/rules
+Content-Type: application/json
+
+  {
+    "name": "Spain - Long relationship",
+    "rate": {
+      "percent": "8.5"
+    },
+    "restrictions": {
+      "@commercialRelationship.duration": {
+        "gt": "6 months"
+      },
+      "@client.location": {
+        "country": "ES"
+      },
+      "@freelancer.location": {
+        "country": "ES"
+      },
+      "@project.duration": {
+        "gt": "1 month"
+      }
+    }
+  }
+
+
+### Expected: 201 Created
+
+### -----------------------------------------
+### 2. Create a complex rule with @or
+### -----------------------------------------
+POST http://localhost:8080/rules
+Content-Type: application/json
+
+{
+  "name": "Complex rule",
+  "rate": {
+    "percent": "3"
+  },
+  "restrictions": {
+    "@or": {
+      "@client.location": {
+        "country": "DE"
+      },
+      "@or": {
+        "@freelancer.location": {
+          "country": "ES"
+        },
+        "@project.duration": {
+          "lt": "1 year"
+        }
+      }
+    },
+    "@commercialRelationship.duration": {
+      "gt": "7 weeks"
+    }
+  }
+}
+
+### Expected: 201 Created
+
+### -----------------------------------------
+### 3. Calculate commission - Should match "Spain - Long relationship" (8.5%)
+### -----------------------------------------
+POST http://localhost:8080/calculate
+Content-Type: application/json
+
+{
+"client": {
+  "ip": "217.127.206.227"
+},
+"freelancer": {
+  "ip": "217.127.206.227"
+},
+"commercialRelationship": {
+  "firstProject": "2018-04-16T13:24:17.510Z",
+  "lastProject": "2018-11-16T14:24:17.510Z"
+},
+"project": {
+  "duration": "2 months"
+}
+}
+
+### Expected: { "fees": "8.5", "reason": "Spain - Long relationship" }
+
+### -----------------------------------------
+### 4. Calculate commission - No rule matches (default 10%)
+### -----------------------------------------
+POST http://localhost:8080/calculate
+Content-Type: application/json
+
+{
+"client": {
+  "ip": "8.29.230.164"
+},
+"freelancer": {
+  "ip": "1.186.0.7"
+},
+"commercialRelationship": {
+  "firstProject": "2024-01-01T00:00:00.000Z",
+  "lastProject": "2024-01-15T00:00:00.000Z"
+},
+"project": {
+  "duration": "1 week"
+}
+}
+
+### Expected: { "fees": "10" }
+
+### -----------------------------------------
+### 5. Calculate commission - German client, should match "Complex rule" (3%)
+### -----------------------------------------
+POST http://localhost:8080/calculate
+Content-Type: application/json
+
+{
+"client": {
+  "ip": "102.129.156.42"
+},
+"freelancer": {
+  "ip": "8.29.230.164"
+},
+"commercialRelationship": {
+  "firstProject": "2024-01-01T00:00:00.000Z",
+  "lastProject": "2024-03-15T00:00:00.000Z"
+},
+"project": {
+  "duration": "6 months"
+}
+}
+
+### Expected: { "fees": "3", "reason": "Complex rule" }
+
+### -----------------------------------------
+### 6. Create a France-only rule
+### -----------------------------------------
+POST http://localhost:8080/rules
+Content-Type: application/json
+
+{
+"name": "France domestic",
+"rate": {
+  "percent": "7"
+},
+"restrictions": {
+  "@client.location": {
+    "country": "FR"
+  },
+  "@freelancer.location": {
+    "country": "FR"
+  }
+}
+}
+
+### Expected: 201 Created
+
+### -----------------------------------------
+### 7. Calculate - France domestic (7%)
+### -----------------------------------------
+POST http://localhost:8080/calculate
+Content-Type: application/json
+
+{
+"client": {
+  "ip": "8.29.230.164"
+},
+"freelancer": {
+  "ip": "8.29.230.164"
+},
+"commercialRelationship": {
+  "firstProject": "2024-01-01T00:00:00.000Z",
+  "lastProject": "2024-06-01T00:00:00.000Z"
+},
+"project": {
+  "duration": "3 months"
+}
+}
+
+### Expected: { "fees": "7", "reason": "France domestic" }
