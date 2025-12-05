@@ -9,6 +9,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Application service that orchestrates pricing use cases.
+ * <p>
+ * This service coordinates domain objects to fulfill business operations.
+ * It contains no business logic itself, delegating all domain logic to
+ * the domain layer (e.g., {@link CommissionCalculator}).
+ */
 @Service
 public class PricingApplicationService {
     private final PricingRuleRepository pricingRuleRepository;
@@ -19,10 +26,21 @@ public class PricingApplicationService {
         this.commissionCalculator = commissionCalculator;
     }
 
+    /**
+     * Creates a new pricing rule.
+     *
+     * @param rule the pricing rule to persist
+     */
     public void createRule(PricingRule rule) {
         pricingRuleRepository.save(rule);
     }
 
+    /**
+     * Calculates the commission for a given pricing context.
+     *
+     * @param context the pricing context to evaluate
+     * @return the commission result with the applicable rate
+     */
     public CommissionResult calculateCommission(PricingContext context) {
         List<PricingRule> rules = pricingRuleRepository.findAll();
         return commissionCalculator.calculate(context, rules);
